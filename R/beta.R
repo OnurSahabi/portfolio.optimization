@@ -1,5 +1,5 @@
 #' @export
-beta <- function(data1, data2, stock_cols, index_col) {
+b_capm <- function(data1, data2, stock_cols, index_col) {
 
   index_vec <- as.vector(data2[, index_col])
 
