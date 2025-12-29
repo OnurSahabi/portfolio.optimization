@@ -1,9 +1,10 @@
 #' @export
-beta <- function(stocks_ret, index_ret) {
+beta <- function(data1, data2, stock_cols, index_col) {
 
-  betas <- apply(stocks_ret, 2, function(x) {
-    cov(x, index_ret) / var(index_ret)
-  })
+  index_vec <- as.vector(data2[, index_col])
+
+  betas <- cov(data1[, stock_cols], index_vec)[, 1] /
+    var(index_vec)
 
   return(betas)
 }
