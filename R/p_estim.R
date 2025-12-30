@@ -1,5 +1,5 @@
 #' @export
-p_estim <- function(data, target_return, rf = 0) {
+p_estim <- function(data, return, rf = 0, digits = 2) {
 
   mu <- colMeans(data)
   Sigma <- cov(data)
@@ -7,14 +7,13 @@ p_estim <- function(data, target_return, rf = 0) {
   n <- length(mu)
   ones <- rep(1, n)
 
-  # KKT sistemi (eşitlik kısıtları)
   KKT <- rbind(
     cbind(2 * Sigma, ones, mu),
     cbind(t(ones), 0, 0),
     cbind(t(mu),   0, 0)
   )
 
-  rhs <- c(rep(0, n), 1, target_return)
+  rhs <- c(rep(0, n), 1, return)
 
   sol <- solve(KKT, rhs)
   w <- sol[1:n]
@@ -23,6 +22,8 @@ p_estim <- function(data, target_return, rf = 0) {
   port_return <- sum(w * mu)
   port_risk   <- sqrt(as.numeric(t(w) %*% Sigma %*% w))
   port_sharpe <- (port_return - rf) / port_risk
+
+  w <- round(w, digits)
 
   return(list(
     weights = w,
