@@ -1,5 +1,6 @@
 #' @export
-p_beta <- function(data_var, data_index, var_cols, index_col, weights = NULL, tau = 0.05) {
+p_beta <- function(data_var, data_index, var_cols, index_col,
+                   weights = NULL, tau = 0.05, rf = 0) {
 
   index_vec <- as.vector(data_index[, index_col])
   var_mat <- data_var[, var_cols]
@@ -49,12 +50,30 @@ p_beta <- function(data_var, data_index, var_cols, index_col, weights = NULL, ta
 
   colnames(beta_mat) <- var_cols
 
+  # --- TREYNOR (SADECE beta_all) ---
+  mean_ret_assets <- colMeans(var_mat, na.rm = TRUE)
+  treynor_assets  <- (mean_ret_assets - rf) / beta
+
+  treynor_row <- matrix(
+    treynor_assets,
+    nrow = 1,
+    dimnames = list("treynor", var_cols)
+  )
+
   if (!is.null(weights)) {
-    beta_mat <- cbind(
-      beta_mat,
-      Portfolio = as.numeric(beta_mat %*% weights)
-    )
+
+    beta_p <- as.numeric(beta_mat %*% weights)
+
+    port_ret   <- as.numeric(var_mat %*% weights)
+    mean_ret_p <- mean(port_ret, na.rm = TRUE)
+
+    treynor_p <- (mean_ret_p - rf) / sum(beta * weights)
+
+    beta_mat    <- cbind(beta_mat, Portfolio = beta_p)
+    treynor_row <- cbind(treynor_row, Portfolio = treynor_p)
   }
+
+  beta_mat <- rbind(beta_mat, treynor_row)
 
   beta_mat <- round(beta_mat, 4)
   beta_df  <- as.data.frame(beta_mat)
