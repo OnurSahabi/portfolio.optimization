@@ -41,7 +41,7 @@ p_beta <- function(data_var, data_index, var_cols, index_col, weights = NULL, ta
   )
 
   rownames(beta_mat) <- c(
-    "beta_all",
+    "beta",
     paste0("beta_mid_", 1 - 2*tau),
     paste0("beta_low_", tau),
     paste0("beta_high_", tau)
