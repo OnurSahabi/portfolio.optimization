@@ -50,7 +50,7 @@ p_beta <- function(data_var, data_index, var_cols, index_col,
 
   colnames(beta_mat) <- var_cols
 
-  # --- TREYNOR (SADECE beta_all) ---
+  # --- TREYNOR ---
   mean_ret_assets <- colMeans(var_mat, na.rm = TRUE)
   treynor_assets  <- (mean_ret_assets - rf) / beta
 
