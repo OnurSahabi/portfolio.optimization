@@ -6,12 +6,11 @@ p_optim <- function(data, rf = 0, digits = 2) {
   n <- ncol(data)
   assets <- colnames(data)
 
-  # ---------- yardımcı ----------
   port_return <- function(w) sum(w * mu)
   port_risk   <- function(w) sqrt(as.numeric(t(w) %*% Sigma %*% w))
   port_sharpe <- function(w) (port_return(w) - rf) / port_risk(w)
 
-  # ---------- Max Sharpe (AYNI) ----------
+  # ---------- Max Sharpe ----------
   sharpe_obj <- function(w) {
     w <- w / sum(w)
     -port_sharpe(w)
@@ -30,7 +29,6 @@ p_optim <- function(data, rf = 0, digits = 2) {
   # ---------- Min Risk ----------
   if (rf == 0) {
 
-    # ---- eski davranış ----
     var_obj <- function(w) {
       w <- w / sum(w)
       as.numeric(t(w) %*% Sigma %*% w)
@@ -54,12 +52,11 @@ p_optim <- function(data, rf = 0, digits = 2) {
     Dmat <- 2 * Sigma
     dvec <- rep(0, n)
 
-    # Amat^T w >= bvec
     Amat <- cbind(
-      rep(1, n),        # sum(w) >= 1
-      -rep(1, n),       # -sum(w) >= -1
-      mu,               # mu'w >= rf
-      diag(n)           # w >= 0
+      rep(1, n),
+      -rep(1, n),
+      mu,
+      diag(n)
     )
 
     bvec <- c(1, -1, rf, rep(0, n))
