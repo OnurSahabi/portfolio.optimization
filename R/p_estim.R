@@ -1,36 +1,36 @@
 #' @export
-p_estim <- function(data, return, rf = 0, digits = 2) {
+p_estim <- function(data, return = NULL, risk = NULL, rf = 0, digits = 2) {
 
-  mu <- colMeans(data)
-  Sigma <- cov(data)
+  if (xor(is.null(return), is.null(risk)) == FALSE)
+    stop("Provide exactly one of return or risk.")
 
-  n <- length(mu)
-  ones <- rep(1, n)
+  mu  <- colMeans(data)
+  S   <- cov(data)
+  one <- rep(1, length(mu))
 
-  KKT <- rbind(
-    cbind(2 * Sigma, ones, mu),
-    cbind(t(ones), 0, 0),
-    cbind(t(mu),   0, 0)
-  )
+  invS <- chol2inv(chol(S))
 
-  rhs <- c(rep(0, n), 1, return)
+  A <- drop(crossprod(one, invS %*% one))
+  B <- drop(crossprod(one, invS %*% mu))
+  C <- drop(crossprod(mu,  invS %*% mu))
+  D <- A*C - B^2
 
-  sol <- solve(KKT, rhs)
-  w <- sol[1:n]
+  r <- if (!is.null(return)) {
+    return
+  } else {
+    s2 <- risk^2
+    (B + sqrt(max(B^2 - A*(C - D*s2), 0))) / A
+  }
+
+  w <- drop(invS %*% (((C - B*r)/D)*one + ((A*r - B)/D)*mu))
   names(w) <- colnames(data)
 
-  port_return <- sum(w * mu)
-  port_risk   <- sqrt(as.numeric(t(w) %*% Sigma %*% w))
-  port_sharpe <- (port_return - rf) / port_risk
+  R <- sum(w * mu)
+  sd <- sqrt(drop(crossprod(w, S %*% w)))
 
-  w <- round(w, digits)
 
-  return(list(
-    weights = w,
-    metrics = c(
-      Return = port_return,
-      Risk   = port_risk,
-      Sharpe = port_sharpe
-    )
-  ))
+  list(
+    weights = round(w, digits),
+    metrics = round(c(Return = R, Risk = sd, Sharpe = (R - rf)/sd), 6)
+  )
 }
