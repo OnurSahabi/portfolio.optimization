@@ -80,7 +80,7 @@ p_optim <- function(data, rf = 0, digits = 2) {
   names(w_var) <- assets
 
   # ---------- results ----------
-  results_df <- data.frame(
+  stats_df <- data.frame(
     Type   = c("Max Sharpe", "Min Risk"),
     Sharpe = c(port_sharpe(w_sharpe), port_sharpe(w_var)),
     Return = c(port_return(w_sharpe), port_return(w_var)),
@@ -97,7 +97,7 @@ p_optim <- function(data, rf = 0, digits = 2) {
   )
 
   return(list(
-    results = results_df,
+    stats = stats_df,
     weights = weights
   ))
 }
