@@ -1,36 +1,47 @@
 #' @export
-p_estim <- function(data, return = NULL, risk = NULL, rf = 0, digits = 2) {
+p_estim <- function(data, risk = NULL, return = NULL, rf = 0, digits = 2) {
 
-  if (xor(is.null(return), is.null(risk)) == FALSE)
-    stop("Provide exactly one of return or risk.")
+  if (!requireNamespace("CVXR", quietly = TRUE))
+    stop("CVXR kurulu değil")
 
-  mu  <- colMeans(data)
-  S   <- cov(data)
-  one <- rep(1, length(mu))
+  if (xor(is.null(risk), is.null(return)) == FALSE)
+    stop("Sadece risk veya sadece return vermelisin")
 
-  invS <- chol2inv(chol(S))
+  mu <- colMeans(data)
+  S  <- cov(data)
+  L  <- chol(S)
+  n  <- length(mu)
 
-  A <- drop(crossprod(one, invS %*% one))
-  B <- drop(crossprod(one, invS %*% mu))
-  C <- drop(crossprod(mu,  invS %*% mu))
-  D <- A*C - B^2
+  w <- CVXR::Variable(n)
 
-  r <- if (!is.null(return)) {
-    return
+  obj <- if (is.null(return)) {
+    CVXR::Maximize(t(mu - rf) %*% w)
   } else {
-    s2 <- risk^2
-    (B + sqrt(max(B^2 - A*(C - D*s2), 0))) / A
+    CVXR::Minimize(CVXR::norm2(L %*% w))
   }
 
-  w <- drop(invS %*% (((C - B*r)/D)*one + ((A*r - B)/D)*mu))
-  names(w) <- colnames(data)
+  cons <- list(
+    w >= 0,
+    sum(w) == 1
+  )
 
-  R <- sum(w * mu)
-  sd <- sqrt(drop(crossprod(w, S %*% w)))
+  cons <- if (is.null(return)) {
+    c(cons, list(CVXR::norm2(L %*% w) <= risk))
+  } else {
+    c(cons, list(t(mu) %*% w == return))
+  }
 
+  sol <- CVXR::solve(CVXR::Problem(obj, cons))
+
+  w_hat <- as.numeric(sol$getValue(w))
+  names(w_hat) <- colnames(data)
+
+  Return  <- sum(mu * w_hat)
+  Risk <- sqrt(drop(t(w_hat) %*% S %*% w_hat))
+  Sharpe = (Return - rf) / Risk
 
   list(
-    weights = round(w, digits),
-    metrics = round(c(Return = R, Risk = sd, Sharpe = (R - rf)/sd), 6)
+    weights = round(w_hat, digits),
+    metrics = round(c(Return, Risk, Sharpe), 6)
   )
 }
