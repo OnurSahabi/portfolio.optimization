@@ -42,6 +42,6 @@ p_estim <- function(data, risk = NULL, return = NULL, rf = 0, digits = 2) {
 
   list(
     weights = round(w_hat, digits),
-    metrics = round(c(Return, Risk, Sharpe), 6)
+    metrics = round(c(Return = Return, Risk = Risk, Sharpe = Sharpe), 6)
   )
 }
