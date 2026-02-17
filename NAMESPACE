@@ -2,4 +2,5 @@
 
 export(p_beta)
 export(p_estim)
+export(p_frontier)
 export(p_optim)
