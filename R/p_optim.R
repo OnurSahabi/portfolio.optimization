@@ -1,3 +1,32 @@
+#' Portfolio Optimization: Max Sharpe and Min Risk
+#'
+#' Computes the Maximum Sharpe Ratio portfolio and the
+#' Minimum Variance portfolio under long-only constraints.
+#'
+#' The minimum-variance portfolio is obtained via quadratic programming
+#' with a full-investment constraint and an expected return constraint.
+#'
+#' @param data A numeric matrix or data.frame of asset returns
+#'   (rows = time, columns = assets).
+#' @param rf Numeric. Minimum expected return constraint for the
+#'   minimum-variance portfolio (default = 0).
+#' @param digits Integer. Number of decimal places used for rounding weights.
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{stats}{Data frame with Sharpe ratio, expected return, and risk.}
+#'   \item{weights}{Matrix of optimal portfolio weights.}
+#' }
+#'
+#' @importFrom quadprog solve.QP
+#' @importFrom stats optim cov colMeans
+#'
+#' @examples
+#' set.seed(1)
+#' R <- matrix(rnorm(200), ncol = 4)
+#' colnames(R) <- paste0("Asset", 1:4)
+#' p_optim(R)
+#'
 #' @export
 p_optim <- function(data, rf = 0, digits = 2) {
 
@@ -11,7 +40,7 @@ p_optim <- function(data, rf = 0, digits = 2) {
   data <- as.matrix(data)
 
   mu    <- colMeans(data)
-  Sigma <- cov(data)
+  Sigma <- stats::cov(data)
   Sigma <- (Sigma + t(Sigma)) / 2
   Sigma <- Sigma + diag(1e-10, ncol(Sigma))
 
